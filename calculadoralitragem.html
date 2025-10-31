@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de Litragem de Carro</title>
+  <style>
+    body {
+      background-color: #1e1e1e;
+      color: #00ff88;
+      font-family: "Poppins", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      position: relative;
+    }
+    h1 {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    select, input {
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 8px;
+      border: none;
+      width: 260px;
+      text-align: center;
+      font-size: 15px;
+    }
+    button {
+      background-color: #00ff88;
+      border: none;
+      color: #1e1e1e;
+      font-weight: bold;
+      padding: 10px 20px;
+      border-radius: 8px;
+      margin-top: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+      font-size: 15px;
+    }
+    button:hover {
+      background-color: #00cc6a;
+    }
+    .resultado {
+      margin-top: 20px;
+      background-color: #2a2a2a;
+      padding: 15px;
+      border-radius: 10px;
+      width: 320px;
+      text-align: center;
+      font-size: 14px;
+    }
+    .progress-container {
+      width: 100%;
+      height: 20px;
+      background-color: #444;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ff3131, #ffaa00, #00ff88);
+      border-radius: 10px;
+      transition: width 0.6s ease-in-out;
+    }
+    .obs {
+      margin-top: 10px;
+      color: #bbb;
+      font-size: 13px;
+    }
+    .assinatura {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      color: rgba(255, 255, 255, 0.3);
+      font-size: 12px;
+      pointer-events: none;
+    }
+    .footer {
+      position: absolute;
+      bottom: 30px;
+      color: #777;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Calculadora de Litragem 🚗</h1>
+
+  <select id="combustivel" onchange="atualizarConsumo(); salvarDados();">
+    <option value="gasolina">⛽ Gasolina</option>
+    <option value="alcool">🍃 Álcool</option>
+    <option value="diesel">🛻 Diesel</option>
+  </select>
+
+  <input type="number" id="valor" placeholder="Valor abastecido (R$)" oninput="salvarDados()"/>
+  <input type="number" id="preco" placeholder="Preço do combustível (R$/L)" oninput="salvarDados()"/>
+  <input type="number" id="capacidade" placeholder="Capacidade do tanque (L)" oninput="salvarDados()"/>
+  <input type="number" id="consumo" placeholder="Consumo médio (km/L)" oninput="salvarDados()"/>
+
+  <button onclick="calcular()">Calcular</button>
+
+  <div class="resultado" id="resultado">
+    <div class="progress-container">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+  </div>
+
+  <div class="footer">Versão 3.4 • Salvamento automático</div>
+  <div class="assinatura">Created by Talles Rodrigues</div>
+
+  <script>
+    // Salva dados no localStorage
+    function salvarDados() {
+      localStorage.setItem("combustivel", document.getElementById("combustivel").value);
+      localStorage.setItem("valor", document.getElementById("valor").value);
+      localStorage.setItem("preco", document.getElementById("preco").value);
+      localStorage.setItem("capacidade", document.getElementById("capacidade").value);
+      localStorage.setItem("consumo", document.getElementById("consumo").value);
+    }
+
+    // Restaura dados ao carregar
+    window.onload = function() {
+      const combustivel = localStorage.getItem("combustivel");
+      if (combustivel) document.getElementById("combustivel").value = combustivel;
+
+      const valor = localStorage.getItem("valor");
+      if (valor) document.getElementById("valor").value = valor;
+
+      const preco = localStorage.getItem("preco");
+      if (preco) document.getElementById("preco").value = preco;
+
+      const capacidade = localStorage.getItem("capacidade");
+      if (capacidade) document.getElementById("capacidade").value = capacidade;
+
+      const consumo = localStorage.getItem("consumo");
+      if (consumo) document.getElementById("consumo").value = consumo;
+
+      // Atualiza consumo padrão se necessário
+      atualizarConsumo();
+    }
+
+    function atualizarConsumo() {
+      const tipo = document.getElementById("combustivel").value;
+      const campoConsumo = document.getElementById("consumo");
+
+      if (tipo === "gasolina") campoConsumo.value = 12;
+      else if (tipo === "alcool") campoConsumo.value = 8.5;
+      else if (tipo === "diesel") campoConsumo.value = 14;
+
+      salvarDados();
+    }
+
+    function calcular() {
+      const valor = parseFloat(document.getElementById("valor").value);
+      const preco = parseFloat(document.getElementById("preco").value);
+      const capacidade = parseFloat(document.getElementById("capacidade").value);
+      const consumo = parseFloat(document.getElementById("consumo").value);
+      const tipo = document.getElementById("combustivel").value;
+
+      if ([valor, preco, capacidade, consumo].some(v => isNaN(v) || v <= 0)) {
+        alert("Por favor, insira valores válidos!");
+        return;
+      }
+
+      const litros = valor / preco;
+      const autonomia = litros * consumo;
+      const percentual = Math.min((litros / capacidade) * 100, 100);
+      const autonomiaCheia = capacidade * consumo;
+
+      // Valor total necessário para encher o tanque
+      const valorTotalTanque = capacidade * preco;
+
+      let mensagem = `
+        <p><strong>Combustível:</strong> ${tipo.toUpperCase()}</p>
+        <p><strong>Litros colocados:</strong> ${litros.toFixed(2)} L</p>
+        <p><strong>Autonomia estimada:</strong> ${autonomia.toFixed(1)} km</p>
+        <p><strong>Percentual do tanque:</strong> ${percentual.toFixed(1)}%</p>
+        <p><strong>Autonomia com tanque cheio:</strong> ${autonomiaCheia.toFixed(0)} km</p>
+      `;
+
+      if (percentual > 90) mensagem += "<p>🚗 Tanque praticamente cheio! Bora rodar!</p>";
+      else if (percentual > 50) mensagem += "<p>⛽ Meio tanque garantido.</p>";
+      else mensagem += "<p>⚠️ Pouco combustível, cuidado com a estrada!</p>";
+
+      // Observação: valor total do tanque
+      mensagem += `<div class="obs">💡 Valor total do tanque: <strong>R$ ${valorTotalTanque.toFixed(2)}</strong></div>`;
+
+      // Atualiza barra de progresso
+      const barra = document.getElementById("progress-bar");
+      barra.style.width = percentual + "%";
+
+      // Atualiza resultado
+      document.getElementById("resultado").innerHTML = mensagem + `
+        <div class="progress-container">
+          <div class="progress-bar" id="progress-bar" style="width:${percentual}%"></div>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
